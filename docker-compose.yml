@@ -1,0 +1,15 @@
+services:
+  tts-fongbe:
+    build: .
+    image: tts-fongbe:latest
+    container_name: tts-fongbe
+    restart: unless-stopped
+    ports:
+      - "8007:8007"
+    env_file:
+      - .env
+    volumes:
+      - hf-cache:/models
+
+volumes:
+  hf-cache:

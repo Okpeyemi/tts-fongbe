@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+transformers
+huggingface_hub
+soundfile
+numpy
+sentencepiece
