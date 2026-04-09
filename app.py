@@ -51,6 +51,8 @@ def health():
 @app.post("/synthesize")
 def synthesize(payload: TTSRequest):
     text = payload.text.strip()
+    speaker_id = payload.speaker_id
+
     if not text:
         raise HTTPException(status_code=400, detail="Le texte est vide")
 
@@ -60,13 +62,11 @@ def synthesize(payload: TTSRequest):
             detail=f"Texte trop long: max {MAX_TEXT_LENGTH} caracteres",
         )
 
-    if payload.speaker_id is not None and NUM_SPEAKERS <= 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Ce modele ne supporte pas plusieurs locuteurs",
-        )
+    if speaker_id is not None and NUM_SPEAKERS <= 1:
+        # Ignore speaker selection for single-speaker models.
+        speaker_id = None
 
-    if payload.speaker_id is not None and payload.speaker_id >= NUM_SPEAKERS:
+    if speaker_id is not None and speaker_id >= NUM_SPEAKERS:
         raise HTTPException(
             status_code=400,
             detail=f"speaker_id invalide (0 a {NUM_SPEAKERS - 1})",
@@ -76,8 +76,8 @@ def synthesize(payload: TTSRequest):
         inputs = tokenizer(text=text, return_tensors="pt")
         inputs = {key: value.to(device) for key, value in inputs.items()}
 
-        if payload.speaker_id is not None:
-            inputs["speaker_id"] = torch.tensor([payload.speaker_id], device=device)
+        if speaker_id is not None:
+            inputs["speaker_id"] = torch.tensor([speaker_id], device=device)
 
         with torch.no_grad():
             waveform = model(**inputs).waveform
